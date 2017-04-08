@@ -89,3 +89,4 @@ ENV/
 .ropeproject
 security_bot_clientcred.txt
 security_bot_usercred.txt
+cvestore.db
