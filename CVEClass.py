@@ -49,8 +49,7 @@ class CVEClass:
                 str_list.append(cve_string +"\n")
 
         for revstr in list(reversed(str_list)):
-            #self.shareToMastodon(revstr)
-            break
+            self.shareToMastodon(revstr)
 
         self.writeCVEListToFile()
         print self.cached_cve_ids
