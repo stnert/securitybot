@@ -11,8 +11,8 @@ rt = RepeatedTimer(10, cveClass.cveUpdate, "World")
 
 try:
     while True:
-        sleep(10) # your long-running job goes here...
+        sleep(60) #Update every minute
 except Exception as e:
     e.msg()
 finally:
-    rt.stop() # better in a try/finally block to make sure the program ends!
+    rt.stop()
