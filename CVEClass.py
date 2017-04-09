@@ -23,13 +23,16 @@ class CVEClass:
 
             cve_string = ""
 
-            if result['id'] in self.cached_cve_ids:
-                pass #ignore
+            if result['id'].strip() in self.cached_cve_ids:
+                pass
+                #print "Ignoring - " + result['id']
             else:
+
                 if len(self.cached_cve_ids) == 30:
                     self.cached_cve_ids.pop()
-                self.cached_cve_ids.append(result['id'])
-                self.cached_cve_ids = sorted(self.cached_cve_ids)
+
+                self.cached_cve_ids.append(str(result['id']))
+                self.cached_cve_ids = sorted(self.cached_cve_ids, reverse=True)
                 
                 dt = parser.parse(result['Published'])
 
@@ -52,7 +55,6 @@ class CVEClass:
             self.shareToMastodon(revstr)
 
         self.writeCVEListToFile()
-        print self.cached_cve_ids
 
     def shareToMastodon(self, cve_str):
         self.mastodonClass.toot(cve_str)
