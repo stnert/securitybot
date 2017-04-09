@@ -1,5 +1,6 @@
 import os
 import json
+from CustQueue import CustQueue
 from ares import CVESearch
 from dateutil import parser
 from MastodonClass import MastodonClass
@@ -10,11 +11,12 @@ class CVEClass:
         self.cve = CVESearch()
         self.store_name = 'cvestore.db'
         self.cached_cve_ids = []
+        self.message_queue = CustQueue()
         self.mastodonClass = MastodonClass()
         self.mastodonClass.initalize()
         self.readCVEListFromFile()
 
-    def cveUpdate(self,name):
+    def cveUpdate(self):
 
         cves = json.loads(self.cve.last())
         str_list = []
@@ -52,9 +54,14 @@ class CVEClass:
                 str_list.append(cve_string +"\n")
 
         for revstr in list(reversed(str_list)):
-            self.shareToMastodon(revstr)
+            self.message_queue.enqueue(revstr)
 
         self.writeCVEListToFile()
+
+    def dequeueMessage(self):
+        if self.message_queue.size() > 0:
+            #print self.message_queue.dequeue()
+            self.shareToMastodon(self.message_queue.dequeue())
 
     def shareToMastodon(self, cve_str):
         self.mastodonClass.toot(cve_str)

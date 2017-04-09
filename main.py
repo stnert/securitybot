@@ -7,12 +7,13 @@ from RepeatedTimer import RepeatedTimer
 
 print "starting..."
 cveClass = CVEClass()
-rt = RepeatedTimer(300, cveClass.cveUpdate, "World") # Update every 5 minutes
-
+cveClassRt = RepeatedTimer(300, cveClass.cveUpdate) # Update every 5 minutes
+cvePostRt = RepeatedTimer(480, cveClass.dequeueMessage) # Post every 8 minutes
 try:
     while True:
-        sleep(60) #Large sleep value
+        sleep(60)
 except Exception as e:
     e.msg()
 finally:
-    rt.stop()
+    cveClassRt.stop()
+    cvePostRt.stop()
