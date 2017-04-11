@@ -1,58 +1,55 @@
 import os
 import json
+import requests
 from CustQueue import CustQueue
 from ares import CVESearch
 from dateutil import parser
 from MastodonClass import MastodonClass
 
 '''
-This CVE Class pulls details :
-    https://cve.circl.lu/
+This CVE Class pulls details from:
+    http://www.cvedetails.com
 '''
-class CVEClass:
+class CVEClassCveDetails:
 
     def __init__(self):
         self.cve = CVESearch()
-        self.store_name = 'cvestore.db'
+        self.store_name = 'cvestoredetails.db'
         self.cached_cve_ids = []
         self.message_queue = CustQueue()
         self.mastodonClass = MastodonClass()
         self.mastodonClass.initalize()
         self.readCVEListFromFile()
+        self.url = "http://www.cvedetails.com/json-feed.php?numrows=30&vendor_id=0&product_id=0&version_id=0&hasexp=0&opec=0&opov=0&opcsrf=0&opfileinc=0&opgpriv=0&opsqli=0&opxss=0&opdirt=0&opmemc=0&ophttprs=0&opbyp=0&opginf=0&opdos=0&orderby=3&cvssscoremin=6"
 
     def cveUpdate(self):
 
-        cves = json.loads(self.cve.last())
+        r = requests.get(self.url)
+        cves = r.json()
         str_list = []
 
-        for result in cves['results']:
-
+        for result in cves:
             cve_string = ""
 
-            if result['id'].strip() in self.cached_cve_ids:
+            if result['cve_id'].strip() in self.cached_cve_ids:
                 pass
             else:
 
                 if len(self.cached_cve_ids) == 30:
                     self.cached_cve_ids.pop()
 
-                self.cached_cve_ids.append(str(result['id']))
+                self.cached_cve_ids.append(str(result['cve_id']))
                 self.cached_cve_ids = sorted(self.cached_cve_ids, reverse=True)
                 
-                dt = parser.parse(result['Published'])
-
                 cve_string += "New CVE Notification"
                 cve_string += "\n\n"
-                cve_string += "Date: "
-                cve_string += "{:%B %d, %Y}".format(dt) + "\n"               
-                cve_string += "CVE-ID : "
-                cve_string += result['id'] + "\n\n"
+                cve_string += "CVE ID: " + result['cve_id'] + "\n\n"
+                cve_string += "CVSS Score: "+ result['cvss_score']+"\n\n"
+                cve_string += "Publish Date: "
+                cve_string += result['publish_date']+ "\n\n"               
                 cve_string += "Summary: "
                 cve_string += result['summary'][:197] +"...\n\n"
-                cve_string += "References: \n"
-
-                for ref in result['references']:
-                    cve_string += ref + "\n"
+                cve_string += "URL: " + result['url'] + "\n"
 
                 str_list.append(cve_string +"\n")
 
@@ -80,6 +77,6 @@ class CVEClass:
 
     def writeCVEListToFile(self):
         print "Writing CVEList to file"
-        file = open('cvestore.db', 'w')
+        file = open(self.store_name, 'w')
         file.write(json.dumps(self.cached_cve_ids))
         file.close()
